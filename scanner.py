@@ -28,6 +28,7 @@ class DirScanner:
         self.start_time = None
         self.session = requests.Session()
         self.session.headers.update({'User-Agent': self.user_agent})
+        self.stop_flag = lambda: False  # Function to check if stop requested
         
     def load_wordlists(self):
         """Load all wordlists into memory"""
@@ -47,19 +48,20 @@ class DirScanner:
         return paths
     
     def generate_urls(self, paths):
-        """Generate URLs with extensions"""
+        """Generate URLs with extensions (like dirsearch)"""
         urls = []
         for path in paths:
-            # Remove leading slash if present (we'll add it properly)
-            path = path.lstrip('/')
+            # Ensure path starts with / for proper URL construction
+            if not path.startswith('/'):
+                path = '/' + path
             
             for ext in self.extensions:
                 if ext:
                     # Path with extension
-                    url = f"{self.target}/{path}{ext}"
+                    url = f"{self.target}{path}{ext}"
                 else:
                     # Path without extension
-                    url = f"{self.target}/{path}"
+                    url = f"{self.target}{path}"
                 
                 urls.append(url)
         return urls
@@ -67,8 +69,6 @@ class DirScanner:
     def test_url(self, url):
         """Test a single URL"""
         try:
-            # Don't encode URLs that are already encoded (contain %)
-            # This allows fuzzing patterns like ..%2f to work correctly
             response = self.session.get(
                 url,
                 timeout=self.timeout,
@@ -87,8 +87,26 @@ class DirScanner:
             if status_code in [301, 302, 303, 307, 308] and 'Location' in response.headers:
                 redirect_location = response.headers['Location']
             
-            # Record interesting responses (including more status codes)
-            if status_code in [200, 201, 204, 301, 302, 303, 307, 308, 400, 401, 403, 405, 500, 503]:
+            # FILTER FALSE POSITIVES like dirsearch does
+            
+            # Skip redirects to different domains (wildcard redirects - FALSE POSITIVE)
+            if redirect_location:
+                from urllib.parse import urlparse
+                original_domain = urlparse(url).netloc
+                redirect_domain = urlparse(redirect_location).netloc
+                
+                # If redirecting to different domain, it's a false positive
+                if redirect_domain and redirect_domain != original_domain:
+                    return
+                
+                # If redirecting to homepage/root, it's a false positive
+                redirect_path = urlparse(redirect_location).path
+                if redirect_path in ['/', '', '/index.html', '/index.php']:
+                    return
+            
+            # ONLY record status codes that indicate resource EXISTS (like dirsearch)
+            # DO NOT record redirects unless they're to the SAME path on same domain
+            if status_code in [200, 201, 204, 401, 403, 405, 500, 503]:
                 result = {
                     'url': url,
                     'status': status_code,
@@ -100,6 +118,25 @@ class DirScanner:
                 with self.lock:
                     self.results.append(result)
                     self.print_result(result)
+            # Only show 301/302 if it's redirecting within the same domain to a different path
+            elif status_code in [301, 302] and redirect_location:
+                from urllib.parse import urlparse
+                redirect_path = urlparse(redirect_location).path
+                original_path = urlparse(url).path
+                
+                # Only show if redirecting to a DIFFERENT path on SAME domain
+                if redirect_path != original_path:
+                    result = {
+                        'url': url,
+                        'status': status_code,
+                        'size': content_length,
+                        'redirect': redirect_location,
+                        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    }
+                    
+                    with self.lock:
+                        self.results.append(result)
+                        self.print_result(result)
                     
         except requests.exceptions.Timeout:
             pass
@@ -111,39 +148,50 @@ class DirScanner:
             pass
     
     def print_result(self, result):
-        """Print a result to console"""
+        """Print a result to console (dirsearch style)"""
         status = result['status']
         size = result['size']
         url = result['url']
         redirect = result.get('redirect')
         
-        # Color coding based on status
+        # Simple color coding like dirsearch
         if status == 200:
             status_str = f"\033[92m{status}\033[0m"  # Green
-        elif status in [301, 302, 303, 307, 308]:
+        elif status in [301, 302]:
             status_str = f"\033[93m{status}\033[0m"  # Yellow
         elif status in [401, 403]:
             status_str = f"\033[91m{status}\033[0m"  # Red
         else:
-            status_str = f"{status}"
+            status_str = f"\033[94m{status}\033[0m"  # Blue
         
         # Format output like dirsearch
         output = f"[{status_str}] {size:>8}B  {url}"
         
         # Add redirect location if present
         if redirect:
-            output += f"  \033[96m-> {redirect}\033[0m"  # Cyan for redirect
+            output += f"  -> {redirect}"
         
         print(output)
     
     def worker(self):
         """Worker thread that processes URLs from queue"""
-        while True:
-            url = self.queue.get()
-            if url is None:
-                break
-            self.test_url(url)
-            self.queue.task_done()
+        while not self.stop_flag():
+            try:
+                url = self.queue.get(timeout=0.05)  # Very short timeout for fast response
+                if url is None:
+                    self.queue.task_done()
+                    break
+                    
+                # Check stop flag before processing
+                if not self.stop_flag():
+                    self.test_url(url)
+                    
+                self.queue.task_done()
+            except:
+                # Queue empty or timeout - check stop flag and continue
+                if self.stop_flag():
+                    break
+                continue
     
     def print_progress(self):
         """Print progress periodically"""
@@ -187,24 +235,45 @@ class DirScanner:
         progress_thread.daemon = True
         progress_thread.start()
         
-        # Add URLs to queue
+        # Add URLs to queue (but stop if flag set)
+        added = 0
         for url in urls:
+            if self.stop_flag():
+                print("\n[!] Stop requested, cancelling remaining URLs...")
+                break
             self.queue.put(url)
+            added += 1
         
-        # Wait for all tasks to complete
-        self.queue.join()
+        # If stopped early, signal workers to stop
+        if self.stop_flag():
+            print(f"[!] Scan stopped after adding {added}/{self.total} URLs")
+            # Stop workers immediately
+            for _ in range(self.threads):
+                self.queue.put(None)
+        else:
+            # Normal completion - wait for queue to empty
+            try:
+                self.queue.join()
+            except:
+                pass
+            
+            # Stop workers
+            for _ in range(self.threads):
+                self.queue.put(None)
         
-        # Stop workers
-        for _ in range(self.threads):
-            self.queue.put(None)
+        # Don't wait too long for threads
         for t in threads:
-            t.join()
+            t.join(timeout=0.5)
         
-        # Wait for progress thread
-        progress_thread.join(timeout=1)
+        # Don't wait for progress thread
         
         elapsed = time.time() - self.start_time
-        print(f"\n[+] Scan completed in {elapsed:.2f}s")
+        
+        if self.stop_flag():
+            print(f"\n[!] Scan stopped after {elapsed:.2f}s")
+        else:
+            print(f"\n[+] Scan completed in {elapsed:.2f}s")
+            
         print(f"[+] Found {len(self.results)} results")
         
         return self.results

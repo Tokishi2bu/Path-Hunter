@@ -13,8 +13,12 @@ import json
 import tempfile
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = 'wordlists'
-app.config['REPORTS_FOLDER'] = 'reports'
+
+# Get the directory where this script is located
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+app.config['UPLOAD_FOLDER'] = os.path.join(BASE_DIR, 'wordlists')
+app.config['REPORTS_FOLDER'] = os.path.join(BASE_DIR, 'reports')
 
 # Ensure directories exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -29,7 +33,8 @@ current_scan = {
     'progress': 0,
     'total': 0,
     'results': [],
-    'scanner': None
+    'scanner': None,
+    'stop_requested': False  # Flag to stop the scan
 }
 
 @app.route('/')
@@ -80,8 +85,15 @@ def start_scan():
     """Start a new scan"""
     global current_scan
     
+    # If a scan is running, force stop it IMMEDIATELY
     if current_scan['running']:
-        return jsonify({'success': False, 'error': 'Scan already running'})
+        print("[!] Stopping previous scan...")
+        current_scan['stop_requested'] = True
+        current_scan['running'] = False  # Force it to stop immediately
+        
+        # Give it a tiny moment
+        import time
+        time.sleep(0.2)
     
     data = request.json
     target = data.get('target', '').strip()
@@ -118,7 +130,7 @@ def start_scan():
             # Permanent wordlist from disk
             wordlist_paths.append(os.path.join(app.config['UPLOAD_FOLDER'], wl))
     
-    # Reset current scan
+    # RESET current scan - clear previous results
     current_scan = {
         'running': True,
         'progress': 0,
@@ -126,7 +138,8 @@ def start_scan():
         'results': [],
         'scanner': None,
         'target': target,
-        'temp_files': temp_files  # Track temp files for cleanup
+        'temp_files': temp_files,
+        'stop_requested': False
     }
     
     # Create scanner
@@ -148,7 +161,10 @@ def start_scan():
             import urllib3
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
             
+            # Pass stop flag to scanner
+            scanner.stop_flag = lambda: current_scan.get('stop_requested', False)
             results = scanner.scan()
+            
             current_scan['results'] = results
             current_scan['running'] = False
             
@@ -197,6 +213,17 @@ def scan_status():
         'results_count': len(current_scan['results']),
         'results': []
     })
+
+@app.route('/stop_scan', methods=['POST'])
+def stop_scan():
+    """Stop the current scan"""
+    global current_scan
+    
+    if current_scan['running']:
+        current_scan['stop_requested'] = True
+        return jsonify({'success': True, 'message': 'Stopping scan...'})
+    
+    return jsonify({'success': False, 'message': 'No scan running'})
 
 @app.route('/get_results')
 def get_results():

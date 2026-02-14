@@ -302,13 +302,13 @@
         }
         
         .btn-secondary {
-            background: rgba(107, 114, 128, 0.8);
-            color: #f3f4f6;
-            border: 1px solid rgba(107, 114, 128, 0.3);
+            background: #ef4444;
+            color: white;
+            border: 1px solid #dc2626;
         }
         
         .btn-secondary:hover {
-            background: rgba(107, 114, 128, 1);
+            background: #dc2626;
         }
         
         .btn-success {
@@ -505,7 +505,7 @@
             text-decoration: underline;
         }
         
-        .status-200 {
+        .status-200, .status-201, .status-204 {
             color: #10b981;
             font-weight: 700;
             font-family: 'JetBrains Mono', monospace;
@@ -529,10 +529,88 @@
             font-family: 'JetBrains Mono', monospace;
         }
         
-        .status-405, .status-500, .status-503 {
+        .status-404 {
+            color: #6b7280;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .status-405, .status-406 {
+            color: #ec4899;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .status-500, .status-501, .status-502, .status-503, .status-504 {
             color: #8b5cf6;
             font-weight: 700;
             font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .status-429 {
+            color: #dc2626;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        /* Status badge style for better visibility */
+        .results-table .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+        
+        /* Success (2xx) - Green background */
+        .status-badge-2xx {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        /* Redirect (3xx) - Orange background */
+        .status-badge-3xx {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        
+        /* Client Error (4xx) - Red/Pink backgrounds */
+        .status-badge-400 {
+            background: rgba(249, 115, 22, 0.1);
+            color: #f97316;
+            border: 1px solid rgba(249, 115, 22, 0.3);
+        }
+        
+        .status-badge-401, .status-badge-403 {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        .status-badge-404 {
+            background: rgba(107, 114, 128, 0.1);
+            color: #6b7280;
+            border: 1px solid rgba(107, 114, 128, 0.3);
+        }
+        
+        .status-badge-405, .status-badge-406 {
+            background: rgba(236, 72, 153, 0.1);
+            color: #ec4899;
+            border: 1px solid rgba(236, 72, 153, 0.3);
+        }
+        
+        .status-badge-429 {
+            background: rgba(220, 38, 38, 0.1);
+            color: #dc2626;
+            border: 1px solid rgba(220, 38, 38, 0.3);
+        }
+        
+        /* Server Error (5xx) - Purple background */
+        .status-badge-5xx {
+            background: rgba(139, 92, 246, 0.1);
+            color: #8b5cf6;
+            border: 1px solid rgba(139, 92, 246, 0.3);
         }
         
         .redirect-link {
@@ -749,6 +827,9 @@
                     <button type="submit" class="btn btn-primary" id="startBtn">
                         <span>🚀 Start Scan</span>
                     </button>
+                    <button type="button" class="btn btn-secondary" id="stopBtn" style="display: none; margin-left: 12px;" onclick="stopScan()">
+                        <span>⏹️ Stop Scan</span>
+                    </button>
                 </form>
             </div>
             
@@ -775,6 +856,51 @@
                         <button class="btn btn-success" onclick="downloadReport()">
                             <span>📥 Download Report</span>
                         </button>
+                    </div>
+                    
+                    <!-- Status Code Legend -->
+                    <div style="margin-bottom: 20px; padding: 16px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                        <div style="font-size: 0.85em; font-weight: 600; color: #64748b; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                            Status Code Legend
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="status-badge status-badge-2xx">2xx</span>
+                                <span style="font-size: 0.9em; color: #64748b;">Success</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="status-badge status-badge-3xx">3xx</span>
+                                <span style="font-size: 0.9em; color: #64748b;">Redirect</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="status-badge status-badge-400">400</span>
+                                <span style="font-size: 0.9em; color: #64748b;">Bad Request</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="status-badge status-badge-401">401</span>
+                                <span style="font-size: 0.9em; color: #64748b;">Unauthorized</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="status-badge status-badge-403">403</span>
+                                <span style="font-size: 0.9em; color: #64748b;">Forbidden</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="status-badge status-badge-404">404</span>
+                                <span style="font-size: 0.9em; color: #64748b;">Not Found</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="status-badge status-badge-405">405/406</span>
+                                <span style="font-size: 0.9em; color: #64748b;">Method Error</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="status-badge status-badge-429">429</span>
+                                <span style="font-size: 0.9em; color: #64748b;">Rate Limit</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="status-badge status-badge-5xx">5xx</span>
+                                <span style="font-size: 0.9em; color: #64748b;">Server Error</span>
+                            </div>
+                        </div>
                     </div>
                     
                     <div style="overflow-x: auto;">
@@ -906,9 +1032,20 @@
                 return;
             }
             
+            // RESET UI - Clear previous results
+            document.getElementById('resultsBody').innerHTML = '';
+            document.getElementById('resultsCount').textContent = '0';
+            document.getElementById('progressPercent').textContent = '0';
+            document.getElementById('scannedCount').textContent = '0';
+            document.getElementById('totalCount').textContent = '0';
+            document.getElementById('progressFill').style.width = '0%';
+            
             const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            
             startBtn.disabled = true;
             startBtn.innerHTML = '<span class="spinner"></span><span>Starting...</span>';
+            stopBtn.style.display = 'inline-flex';
             
             try {
                 const response = await fetch('/start_scan', {
@@ -935,13 +1072,42 @@
                     alert('Error: ' + result.error);
                     startBtn.disabled = false;
                     startBtn.innerHTML = '<span>🚀 Start Scan</span>';
+                    stopBtn.style.display = 'none';
                 }
             } catch (error) {
                 alert('Error: ' + error.message);
                 startBtn.disabled = false;
                 startBtn.innerHTML = '<span>🚀 Start Scan</span>';
+                stopBtn.style.display = 'none';
             }
         });
+        
+        async function stopScan() {
+            const stopBtn = document.getElementById('stopBtn');
+            stopBtn.disabled = true;
+            stopBtn.innerHTML = '<span class="spinner"></span><span>Stopping...</span>';
+            
+            try {
+                const response = await fetch('/stop_scan', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    clearInterval(scanInterval);
+                    document.getElementById('startBtn').disabled = false;
+                    document.getElementById('startBtn').innerHTML = '<span>🚀 Start Scan</span>';
+                    stopBtn.style.display = 'none';
+                    stopBtn.disabled = false;
+                    stopBtn.innerHTML = '<span>⏹️ Stop Scan</span>';
+                }
+            } catch (error) {
+                console.error('Error stopping scan:', error);
+                stopBtn.disabled = false;
+                stopBtn.innerHTML = '<span>⏹️ Stop Scan</span>';
+            }
+        }
         
         function startMonitoring() {
             scanInterval = setInterval(updateStatus, 1000);
@@ -969,6 +1135,7 @@
                     clearInterval(scanInterval);
                     document.getElementById('startBtn').disabled = false;
                     document.getElementById('startBtn').innerHTML = '<span>🚀 Start Scan</span>';
+                    document.getElementById('stopBtn').style.display = 'none';
                     
                     // Load all results
                     loadAllResults();
@@ -1005,7 +1172,27 @@
                     const row = document.createElement('tr');
                     row.dataset.url = result.url;
                     
+                    // Determine status class and badge class
                     const statusClass = `status-${result.status}`;
+                    let badgeClass = '';
+                    
+                    if (result.status >= 200 && result.status < 300) {
+                        badgeClass = 'status-badge-2xx';
+                    } else if (result.status >= 300 && result.status < 400) {
+                        badgeClass = 'status-badge-3xx';
+                    } else if (result.status === 400) {
+                        badgeClass = 'status-badge-400';
+                    } else if (result.status === 401 || result.status === 403) {
+                        badgeClass = `status-badge-${result.status}`;
+                    } else if (result.status === 404) {
+                        badgeClass = 'status-badge-404';
+                    } else if (result.status === 405 || result.status === 406) {
+                        badgeClass = `status-badge-${result.status}`;
+                    } else if (result.status === 429) {
+                        badgeClass = 'status-badge-429';
+                    } else if (result.status >= 500 && result.status < 600) {
+                        badgeClass = 'status-badge-5xx';
+                    }
                     
                     // Format redirect cell
                     let redirectCell = '—';
@@ -1014,7 +1201,7 @@
                     }
                     
                     row.innerHTML = `
-                        <td class="${statusClass}">${result.status}</td>
+                        <td><span class="status-badge ${badgeClass} ${statusClass}">${result.status}</span></td>
                         <td>${formatBytes(result.size)}</td>
                         <td><a href="${result.url}" target="_blank">${result.url}</a></td>
                         <td>${redirectCell}</td>
