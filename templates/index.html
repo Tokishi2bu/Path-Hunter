@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PathHunter - Professional Directory Scanner</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f8fafc;
+            background-image: 
+                linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%),
+                radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.03) 0%, transparent 50%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 30px 20px;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 
+                0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                0 2px 4px -1px rgba(0, 0, 0, 0.06),
+                0 0 0 1px rgba(226, 232, 240, 0.8);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            padding: 40px 50px;
+            border-bottom: 2px solid #e2e8f0;
+            position: relative;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, 
+                transparent,
+                #3b82f6,
+                #6366f1,
+                transparent
+            );
+        }
+        
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header-left {
+            flex: 1;
+        }
+        
+        .header h1 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2.5em;
+            margin-bottom: 8px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header .subtitle {
+            font-size: 1em;
+            color: #64748b;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+        
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 20px;
+            font-size: 0.85em;
+            color: #3b82f6;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+        
+        .header-badge::before {
+            content: '●';
+            color: #10b981;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .content {
+            padding: 40px 50px;
+            background: #fafbfc;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+        }
+        
+        .section:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+        }
+        
+        .section-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.4em;
+            color: #0f172a;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e2e8f0;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(99, 102, 241, 0.1));
+            border-radius: 8px;
+            color: #3b82f6;
+            font-size: 1.1em;
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: #334155;
+            font-weight: 600;
+            font-size: 0.95em;
+            letter-spacing: 0.3px;
+        }
+        
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group input[type="file"] {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 0.95em;
+            transition: all 0.3s;
+            background: #ffffff;
+            color: #1e293b;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            background: #ffffff;
+        }
+        
+        .form-group input::placeholder {
+            color: #94a3b8;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .wordlist-container {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+        
+        .wordlist-item {
+            flex: 1;
+        }
+        
+        .wordlist-checkbox {
+            display: flex;
+            align-items: center;
+            padding: 14px 18px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f8fafc;
+        }
+        
+        .wordlist-checkbox:hover {
+            background: #f1f5f9;
+            border-color: #3b82f6;
+            transform: translateX(4px);
+        }
+        
+        .wordlist-checkbox input[type="checkbox"] {
+            margin-right: 12px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #3b82f6;
+        }
+        
+        .wordlist-checkbox span {
+            color: #334155;
+            font-size: 0.95em;
+            font-weight: 500;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .wordlist-new {
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .btn {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 0.3px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background: rgba(107, 114, 128, 0.8);
+            color: #f3f4f6;
+            border: 1px solid rgba(107, 114, 128, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(107, 114, 128, 1);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        
+        .progress-container {
+            display: none;
+            background: #ffffff;
+            padding: 32px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+        }
+        
+        .progress-container h3 {
+            color: #0f172a;
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            letter-spacing: -0.3px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #f1f5f9;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 16px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6 0%, #6366f1 100%);
+            transition: width 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, 
+                transparent,
+                rgba(255, 255, 255, 0.2),
+                transparent
+            );
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #64748b;
+            font-size: 0.9em;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+        }
+        
+        .progress-info span {
+            color: #3b82f6;
+            font-weight: 600;
+        }
+        
+        .progress-stats {
+            display: flex;
+            gap: 24px;
+            margin-top: 12px;
+        }
+        
+        .progress-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .progress-stat-label {
+            font-size: 0.75em;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .progress-stat-value {
+            font-size: 1.5em;
+            color: #3b82f6;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .results-container {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+        }
+        
+        .results-table thead {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+        
+        .results-table th,
+        .results-table td {
+            padding: 16px 20px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .results-table th {
+            font-weight: 700;
+            font-size: 0.85em;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        
+        .results-table tbody tr {
+            transition: all 0.2s;
+            background: #ffffff;
+        }
+        
+        .results-table tbody tr:hover {
+            background: #f8fafc;
+        }
+        
+        .results-table tbody tr:nth-child(even) {
+            background: #fafbfc;
+        }
+        
+        .results-table tbody tr:nth-child(even):hover {
+            background: #f8fafc;
+        }
+        
+        .results-table td {
+            color: #334155;
+            font-size: 0.9em;
+        }
+        
+        .results-table a {
+            color: #3b82f6;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+        }
+        
+        .results-table a:hover {
+            color: #60a5fa;
+            text-decoration: underline;
+        }
+        
+        .status-200 {
+            color: #10b981;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .status-301, .status-302, .status-303, .status-307, .status-308 {
+            color: #f59e0b;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .status-400 {
+            color: #f97316;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .status-401, .status-403 {
+            color: #ef4444;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .status-405, .status-500, .status-503 {
+            color: #8b5cf6;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .redirect-link {
+            color: #8b5cf6 !important;
+            font-size: 0.85em;
+        }
+        
+        .alert {
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+        
+        .alert-info {
+            background: rgba(59, 130, 246, 0.08);
+            color: #2563eb;
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+        
+        .alert-success {
+            background: rgba(16, 185, 129, 0.08);
+            color: #059669;
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+        
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.08);
+            color: #dc2626;
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+        
+        .upload-area {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 48px 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8fafc;
+        }
+        
+        .upload-area p {
+            color: #64748b;
+            font-size: 1em;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+        }
+        
+        .upload-area:hover {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.05);
+            border-style: solid;
+        }
+        
+        .no-wordlists {
+            padding: 32px;
+            text-align: center;
+            color: #64748b;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px dashed #cbd5e1;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95em;
+        }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        
+        .scrollbar-thumb {
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+        }
+        
+        /* Loading spinner */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <div class="header-left">
+                    <h1>PathHunter</h1>
+                    <p class="subtitle">Professional Directory & Endpoint Scanner</p>
+                    <div class="header-badge">System Online</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <!-- Upload Wordlist Section -->
+            <div class="section">
+                <h2 class="section-title">
+                    <span class="section-icon">📤</span>
+                    Upload Temporary Wordlist
+                </h2>
+                <div class="upload-area" onclick="document.getElementById('wordlistFile').click()">
+                    <p>📁 Click to upload a temporary wordlist (.txt)</p>
+                    <p style="font-size: 0.85em; color: #94a3b8; margin-top: 8px;">⚡ Uploaded files are temporary and will be removed when you refresh or leave this page</p>
+                    <input type="file" id="wordlistFile" accept=".txt" style="display: none;" onchange="uploadWordlist()">
+                </div>
+                <div id="uploadStatus"></div>
+            </div>
+            
+            <!-- Available Wordlists -->
+            <div class="section">
+                <h2 class="section-title">
+                    <span class="section-icon">📋</span>
+                    Available Wordlists
+                </h2>
+                <div id="wordlistsContainer">
+                    {% if permanent_wordlists or temp_wordlists %}
+                        <!-- Permanent Wordlists -->
+                        {% if permanent_wordlists %}
+                        <div style="margin-bottom: 20px;">
+                            <h3 style="font-size: 0.9em; color: #64748b; font-weight: 600; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                💾 Permanent Wordlists
+                            </h3>
+                            {% for wordlist in permanent_wordlists %}
+                            <div class="wordlist-container">
+                                <div class="wordlist-item">
+                                    <label class="wordlist-checkbox">
+                                        <input type="checkbox" name="wordlist" value="{{ wordlist }}">
+                                        <span>{{ wordlist }}</span>
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Temporary Uploaded Wordlists -->
+                        <div id="tempWordlistsSection" {% if not temp_wordlists %}style="display: none;"{% endif %}>
+                            <h3 style="font-size: 0.9em; color: #f59e0b; font-weight: 600; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                ⚡ Temporary Wordlists (Session Only)
+                            </h3>
+                            <div id="tempWordlistsContainer">
+                                {% for wordlist in temp_wordlists %}
+                                <div class="wordlist-container temp-wordlist">
+                                    <div class="wordlist-item">
+                                        <label class="wordlist-checkbox" style="background: #fffbeb; border-color: #fcd34d;">
+                                            <input type="checkbox" name="wordlist" value="{{ wordlist }}" checked>
+                                            <span>{{ wordlist }} <span style="color: #f59e0b; font-size: 0.85em;">⚡</span></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="no-wordlists">
+                            No wordlists available. Please upload wordlist files.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Scan Configuration -->
+            <div class="section">
+                <h2 class="section-title">
+                    <span class="section-icon">⚙️</span>
+                    Scan Configuration
+                </h2>
+                <form id="scanForm">
+                    <div class="form-group">
+                        <label for="targetUrl">Target URL *</label>
+                        <input type="text" id="targetUrl" placeholder="https://example.com" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="threads">Threads</label>
+                            <input type="number" id="threads" value="10" min="1" max="50">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="timeout">Timeout (seconds)</label>
+                            <input type="number" id="timeout" value="5" min="1" max="30">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="extensions">Extensions (comma-separated, e.g., php,html,js)</label>
+                        <input type="text" id="extensions" placeholder="php,html,js">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" id="startBtn">
+                        <span>🚀 Start Scan</span>
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Progress Section -->
+            <div class="progress-container" id="progressContainer">
+                <h3>Scanning in Progress</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-info">
+                    <span>Progress: <span id="progressPercent">0</span>%</span>
+                    <span>Scanned: <span id="scannedCount">0</span> / <span id="totalCount">0</span></span>
+                </div>
+            </div>
+            
+            <!-- Results Section -->
+            <div class="results-container" id="resultsContainer">
+                <div class="section">
+                    <div class="results-header">
+                        <h2 class="section-title" style="margin: 0;">
+                            <span class="section-icon">📊</span>
+                            Results (<span id="resultsCount">0</span> found)
+                        </h2>
+                        <button class="btn btn-success" onclick="downloadReport()">
+                            <span>📥 Download Report</span>
+                        </button>
+                    </div>
+                    
+                    <div style="overflow-x: auto;">
+                        <table class="results-table">
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Size</th>
+                                    <th>URL</th>
+                                    <th>Redirect</th>
+                                    <th>Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let scanInterval = null;
+        
+        async function uploadWordlist() {
+            const fileInput = document.getElementById('wordlistFile');
+            const file = fileInput.files[0];
+            
+            if (!file) return;
+            
+            // Validate file type
+            if (!file.name.endsWith('.txt')) {
+                const statusDiv = document.getElementById('uploadStatus');
+                statusDiv.innerHTML = '<div class="alert alert-danger">❌ Please upload a .txt file</div>';
+                setTimeout(() => statusDiv.innerHTML = '', 3000);
+                fileInput.value = '';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('wordlist', file);
+            
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.innerHTML = '<div class="alert alert-info"><span class="spinner"></span> Uploading ' + file.name + '...</div>';
+            
+            try {
+                const response = await fetch('/upload_wordlist', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    statusDiv.innerHTML = '<div class="alert alert-success">✓ Successfully uploaded: ' + result.filename + '</div>';
+                    
+                    // Add the new wordlist to the list immediately
+                    addWordlistToList(result.filename);
+                    
+                    // Clear the success message after 3 seconds
+                    setTimeout(() => {
+                        statusDiv.innerHTML = '';
+                    }, 3000);
+                } else {
+                    statusDiv.innerHTML = `<div class="alert alert-danger">❌ Error: ${result.error}</div>`;
+                    setTimeout(() => statusDiv.innerHTML = '', 5000);
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="alert alert-danger">❌ Upload failed: ${error.message}</div>`;
+                setTimeout(() => statusDiv.innerHTML = '', 5000);
+            }
+            
+            fileInput.value = '';
+        }
+        
+        function addWordlistToList(filename) {
+            // Show temporary wordlists section if hidden
+            const tempSection = document.getElementById('tempWordlistsSection');
+            if (tempSection) {
+                tempSection.style.display = 'block';
+            }
+            
+            const container = document.getElementById('tempWordlistsContainer') || document.getElementById('wordlistsContainer');
+            
+            // Remove "no wordlists" message if it exists
+            const noWordlists = document.querySelector('.no-wordlists');
+            if (noWordlists) {
+                noWordlists.remove();
+            }
+            
+            // Check if wordlist already exists
+            const existing = Array.from(document.querySelectorAll('input[type="checkbox"]'))
+                .find(cb => cb.value === filename);
+            
+            if (!existing) {
+                const wordlistHtml = `
+                    <div class="wordlist-container wordlist-new temp-wordlist">
+                        <div class="wordlist-item">
+                            <label class="wordlist-checkbox" style="background: #fffbeb; border-color: #fcd34d;">
+                                <input type="checkbox" name="wordlist" value="${filename}" checked>
+                                <span>${filename} <span style="color: #f59e0b; font-size: 0.85em;">⚡</span></span>
+                            </label>
+                        </div>
+                    </div>
+                `;
+                
+                if (document.getElementById('tempWordlistsContainer')) {
+                    document.getElementById('tempWordlistsContainer').insertAdjacentHTML('afterbegin', wordlistHtml);
+                } else {
+                    container.insertAdjacentHTML('afterbegin', wordlistHtml);
+                }
+            }
+        }
+        
+        document.getElementById('scanForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const target = document.getElementById('targetUrl').value.trim();
+            const threads = document.getElementById('threads').value;
+            const timeout = document.getElementById('timeout').value;
+            const extensions = document.getElementById('extensions').value.trim();
+            
+            const selectedWordlists = Array.from(document.querySelectorAll('input[name="wordlist"]:checked'))
+                .map(cb => cb.value);
+            
+            if (selectedWordlists.length === 0) {
+                alert('Please select at least one wordlist');
+                return;
+            }
+            
+            const startBtn = document.getElementById('startBtn');
+            startBtn.disabled = true;
+            startBtn.innerHTML = '<span class="spinner"></span><span>Starting...</span>';
+            
+            try {
+                const response = await fetch('/start_scan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        target,
+                        wordlists: selectedWordlists,
+                        threads,
+                        timeout,
+                        extensions
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('progressContainer').style.display = 'block';
+                    document.getElementById('resultsContainer').style.display = 'block';
+                    startMonitoring();
+                } else {
+                    alert('Error: ' + result.error);
+                    startBtn.disabled = false;
+                    startBtn.innerHTML = '<span>🚀 Start Scan</span>';
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+                startBtn.disabled = false;
+                startBtn.innerHTML = '<span>🚀 Start Scan</span>';
+            }
+        });
+        
+        function startMonitoring() {
+            scanInterval = setInterval(updateStatus, 1000);
+        }
+        
+        async function updateStatus() {
+            try {
+                const response = await fetch('/scan_status');
+                const status = await response.json();
+                
+                const progress = status.total > 0 ? (status.progress / status.total * 100) : 0;
+                
+                document.getElementById('progressFill').style.width = progress + '%';
+                document.getElementById('progressPercent').textContent = progress.toFixed(1);
+                document.getElementById('scannedCount').textContent = status.progress;
+                document.getElementById('totalCount').textContent = status.total;
+                document.getElementById('resultsCount').textContent = status.results_count;
+                
+                // Update results table with latest results
+                if (status.results && status.results.length > 0) {
+                    updateResultsTable(status.results, true);
+                }
+                
+                if (!status.running && status.total > 0) {
+                    clearInterval(scanInterval);
+                    document.getElementById('startBtn').disabled = false;
+                    document.getElementById('startBtn').innerHTML = '<span>🚀 Start Scan</span>';
+                    
+                    // Load all results
+                    loadAllResults();
+                }
+            } catch (error) {
+                console.error('Error updating status:', error);
+            }
+        }
+        
+        async function loadAllResults() {
+            try {
+                const response = await fetch('/get_results');
+                const data = await response.json();
+                updateResultsTable(data.results, false);
+            } catch (error) {
+                console.error('Error loading results:', error);
+            }
+        }
+        
+        function updateResultsTable(results, append = false) {
+            const tbody = document.getElementById('resultsBody');
+            
+            if (!append) {
+                tbody.innerHTML = '';
+            }
+            
+            results.forEach(result => {
+                // Check if this result already exists (by URL)
+                const existingRow = Array.from(tbody.querySelectorAll('tr')).find(
+                    row => row.dataset.url === result.url
+                );
+                
+                if (!existingRow) {
+                    const row = document.createElement('tr');
+                    row.dataset.url = result.url;
+                    
+                    const statusClass = `status-${result.status}`;
+                    
+                    // Format redirect cell
+                    let redirectCell = '—';
+                    if (result.redirect) {
+                        redirectCell = `<a href="${result.redirect}" target="_blank" class="redirect-link">→ ${result.redirect}</a>`;
+                    }
+                    
+                    row.innerHTML = `
+                        <td class="${statusClass}">${result.status}</td>
+                        <td>${formatBytes(result.size)}</td>
+                        <td><a href="${result.url}" target="_blank">${result.url}</a></td>
+                        <td>${redirectCell}</td>
+                        <td style="color: #6b7280;">${result.timestamp}</td>
+                    `;
+                    
+                    if (append) {
+                        tbody.insertBefore(row, tbody.firstChild);
+                    } else {
+                        tbody.appendChild(row);
+                    }
+                }
+            });
+        }
+        
+        function formatBytes(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+        
+        function downloadReport() {
+            window.location.href = '/download_report';
+        }
+    </script>
+</body>
+</html>
